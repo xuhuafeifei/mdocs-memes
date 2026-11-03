@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""把 3x3 表情包大图切成单张 webp，并生成 mdocs 用的 meme.json。
+"""把表情包大图切成单张，并生成 / 追加 mdocs 用的 meme.json。
 
 用法:
-    python3 scripts/slice.py
+    python3 scripts/slice.py           # 处理 captions.json 里有的全部 sheet
+    python3 scripts/slice.py 04 05     # 只处理指定 stem，结果追加进 meme.json
 
 约定:
-    sheets/<stem>.png   一张 3x3 大图（内容大体均分九宫格）
-    captions.json       { "<stem>": [ { "id", "desc" }, ... 9 条，行优先 ] }
-    memes/<id>.webp     切出来的单张（去白边、清掉邻格残边、最长边 360）
+    sheets/<stem>.png   源图（白底贴纸，行列不要求严格等分）
+    captions.json       { "<stem>": [ { "id", "desc" }, ... ] }，行优先
+    memes/<id>.png      切出来的单张（去白边、归属切割、最长边 360）
     meme.json           { "version": 1, "memes": [{ "id", "desc", "meme_name" }] }
 
 做法:
-    1. 横竖都不是严格三等分（相邻贴纸会溢出格线），所以按「每行的空白列」找切口；
-    2. 切口仍会带进邻居的一点边角，用连通块过滤：贴着格子边缘又很小的碎块直接丢掉；
-    3. 剩下的按外接框裁紧，四周留 PAD。
+    1. 按 captions 条数推断行列（9→3x3，12→4x3），再用投影 valley 微调格线；
+    2. 非白像素按「最近格心」归属（避免共享刀线导致一边切了另一边还留着）；
+    3. 每格取归属像素外接框，四周留 PAD，再抠掉与外框连通的白底。
 """
 import json
 import os
@@ -26,11 +27,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHEETS = os.path.join(ROOT, "sheets")
 OUT = os.path.join(ROOT, "memes")
 CAPTIONS = os.path.join(ROOT, "captions.json")
+INDEX = os.path.join(ROOT, "meme.json")
 MAX_SIDE = 360
 PAD = 10
 WHITE = 248
-# 贴边碎块小于这个比例就当邻格残留丢掉
-SLIVER_RATIO = 0.03
+EXT = "png"
 
 
 def valleys(profile, expect, window=80):
@@ -43,35 +44,29 @@ def valleys(profile, expect, window=80):
     return picks
 
 
-def drop_edge_slivers(mask, width, height):
-    """把贴着格子边缘、又明显偏小的连通块抹掉（邻格残留）。"""
-    seen = bytearray(width * height)
-    keep = bytearray(width * height)
-    limit = SLIVER_RATIO * width * height
-    for start in range(width * height):
-        if not mask[start] or seen[start]:
-            continue
-        seen[start] = 1
-        queue = deque([start])
-        comp = []
-        touches = False
-        while queue:
-            idx = queue.popleft()
-            comp.append(idx)
-            x, y = idx % width, idx // width
-            if x == 0 or y == 0 or x == width - 1 or y == height - 1:
-                touches = True
-            for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-                if 0 <= nx < width and 0 <= ny < height:
-                    n = ny * width + nx
-                    if mask[n] and not seen[n]:
-                        seen[n] = 1
-                        queue.append(n)
-        if touches and len(comp) < limit:
-            continue
-        for idx in comp:
-            keep[idx] = 1
-    return keep
+def infer_grid(n, width, height, row_profile):
+    """由条数 + 行向留白推断 (rows, cols)。"""
+    candidates = []
+    for rows in range(1, n + 1):
+        if n % rows == 0:
+            candidates.append((rows, n // rows))
+    if not candidates:
+        raise ValueError(f"无法为 {n} 条 captions 推断行列")
+
+    def gap_score(rows):
+        if rows <= 1:
+            return 0.0
+        expect = [int(height * i / rows) for i in range(1, rows)]
+        cuts = valleys(row_profile, expect)
+        # 切口越空越好
+        return -sum(row_profile[c] for c in cuts)
+
+    # 优先接近方阵，再用行向留白打分
+    def key(rc):
+        rows, cols = rc
+        return (abs(rows - cols), -gap_score(rows), abs(rows * height - cols * width))
+
+    return min(candidates, key=key)
 
 
 def make_transparent(im):
@@ -81,9 +76,11 @@ def make_transparent(im):
     px = im.load()
     bg = bytearray(w * h)
     queue = deque()
+
     def near_white(x, y):
         r, g, b, _ = px[x, y]
         return r >= 240 and g >= 240 and b >= 240
+
     for x in range(w):
         for y in (0, h - 1):
             if near_white(x, y) and not bg[y * w + x]:
@@ -108,65 +105,140 @@ def make_transparent(im):
     return im
 
 
-def cut_cells(sheet):
-    """按内容留白切九宫格，返回 9 张 RGB 图（行优先）。"""
-    gray = sheet.convert("L")
+def connected_components(mask, width, height):
+    """4-连通块。返回 [(pixels, cx, cy), ...]。"""
+    seen = bytearray(width * height)
+    comps = []
+    for start in range(width * height):
+        if not mask[start] or seen[start]:
+            continue
+        seen[start] = 1
+        queue = deque([start])
+        pixels = []
+        sx = sy = 0
+        while queue:
+            idx = queue.popleft()
+            pixels.append(idx)
+            x, y = idx % width, idx // width
+            sx += x
+            sy += y
+            for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+                if 0 <= nx < width and 0 <= ny < height:
+                    n = ny * width + nx
+                    if mask[n] and not seen[n]:
+                        seen[n] = 1
+                        queue.append(n)
+        n = len(pixels)
+        comps.append((pixels, sx / n, sy / n))
+    return comps
+
+
+def cut_cells(sheet, rows, cols):
+    """连通块整块归最近格心；粘连块再按像素拆，最后只渲染本格像素。
+
+    - 整块归属：邻格越界碎边跟回自己的格心，避免「一边切了另一边还留着」
+    - 粘连拆分：若一块里 <85% 像素同属一格，说明两张贴纸碰到了，对该块做 Voronoi
+    """
+    rgb = sheet.convert("RGB")
+    gray = rgb.convert("L")
     width, height = gray.size
-    px = gray.load()
+    gpx = gray.load()
+    spx = rgb.load()
     col = [0] * width
     row = [0] * height
+    mask = bytearray(width * height)
     for y in range(height):
+        base = y * width
         for x in range(width):
-            if px[x, y] < WHITE:
+            if gpx[x, y] < WHITE:
                 col[x] += 1
                 row[y] += 1
-    xs = [0] + valleys(col, [width // 3, (width * 2) // 3]) + [width]
-    ys = [0] + valleys(row, [height // 3, (height * 2) // 3]) + [height]
+                mask[base + x] = 1
+
+    xe = [int(width * i / cols) for i in range(1, cols)]
+    ye = [int(height * i / rows) for i in range(1, rows)]
+    xs = [0] + (valleys(col, xe) if xe else []) + [width]
+    ys = [0] + (valleys(row, ye) if ye else []) + [height]
+
+    centers = []
+    for r in range(rows):
+        for c in range(cols):
+            centers.append(((xs[c] + xs[c + 1]) * 0.5, (ys[r] + ys[r + 1]) * 0.5))
+
+    owner = [-1] * (width * height)
+    boxes = [[width, height, -1, -1] for _ in centers]
+
+    def nearest(x, y):
+        best_i, best_d = 0, 1e18
+        for i, (gx, gy) in enumerate(centers):
+            d = (x - gx) * (x - gx) + (y - gy) * (y - gy)
+            if d < best_d:
+                best_d = d
+                best_i = i
+        return best_i
+
+    def claim(idx, cell_i):
+        owner[idx] = cell_i
+        x, y = idx % width, idx // width
+        box = boxes[cell_i]
+        if x < box[0]:
+            box[0] = x
+        if y < box[1]:
+            box[1] = y
+        if x > box[2]:
+            box[2] = x
+        if y > box[3]:
+            box[3] = y
+
+    for pixels, cx, cy in connected_components(mask, width, height):
+        # 整块先看质心；若块内像素多数已更靠近别的格心，说明两张贴纸粘连了，再按像素拆开
+        votes = {}
+        for idx in pixels:
+            i = nearest(idx % width, idx // width)
+            votes[i] = votes.get(i, 0) + 1
+        primary = max(votes, key=votes.get)
+        if votes[primary] >= 0.85 * len(pixels):
+            for idx in pixels:
+                claim(idx, primary)
+        else:
+            for idx in pixels:
+                claim(idx, nearest(idx % width, idx // width))
 
     cells = []
-    for r in range(3):
-        for c in range(3):
-            boxes = (xs[c], ys[r], xs[c + 1], ys[r + 1])
-            cell = sheet.crop(boxes)
-            cw, ch = cell.size
-            g = cell.convert("L")
-            gp = g.load()
-            mask = bytearray(cw * ch)
-            for y in range(ch):
-                base = y * cw
-                for x in range(cw):
-                    if gp[x, y] < WHITE:
-                        mask[base + x] = 1
-            keep = drop_edge_slivers(mask, cw, ch)
-            left, top, right, bottom = cw, ch, -1, -1
-            for y in range(ch):
-                base = y * cw
-                for x in range(cw):
-                    if keep[base + x]:
-                        if x < left:
-                            left = x
-                        if x > right:
-                            right = x
-                        if y < top:
-                            top = y
-                        if y > bottom:
-                            bottom = y
-            if right < 0:
-                cells.append(cell)
-                continue
-            trimmed = cell.crop(
-                (
-                    max(0, left - PAD),
-                    max(0, top - PAD),
-                    min(cw, right + 1 + PAD),
-                    min(ch, bottom + 1 + PAD),
-                )
-            )
-            cells.append(make_transparent(trimmed))
+    for i, (left, top, right, bottom) in enumerate(boxes):
+        if right < 0:
+            cells.append(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+            continue
+        x0 = max(0, left - PAD)
+        y0 = max(0, top - PAD)
+        x1 = min(width, right + 1 + PAD)
+        y1 = min(height, bottom + 1 + PAD)
+        cell = Image.new("RGB", (x1 - x0, y1 - y0), (255, 255, 255))
+        cpx = cell.load()
+        for y in range(y0, y1):
+            base = y * width
+            for x in range(x0, x1):
+                if owner[base + x] == i:
+                    cpx[x - x0, y - y0] = spx[x, y]
+        cells.append(make_transparent(cell))
     return cells
 
 
-def main() -> int:
+def load_index():
+    if not os.path.isfile(INDEX):
+        return {"version": 1, "memes": []}
+    with open(INDEX, encoding="utf-8") as fh:
+        raw = json.load(fh)
+    memes = raw.get("memes") if isinstance(raw, dict) else None
+    if not isinstance(memes, list):
+        memes = []
+    return {"version": int(raw.get("version", 1)) if isinstance(raw, dict) else 1, "memes": memes}
+
+
+def main(argv=None) -> int:
+    argv = list(argv if argv is not None else sys.argv[1:])
+    only = set(argv) if argv else None
+
     if not os.path.isdir(SHEETS):
         print("缺少 sheets/ 目录", file=sys.stderr)
         return 1
@@ -174,43 +246,71 @@ def main() -> int:
         captions = json.load(fh)
 
     os.makedirs(OUT, exist_ok=True)
-    memes = []
-    seen = set()
+    index = load_index()
+    by_id = {str(m.get("id")): m for m in index["memes"] if isinstance(m, dict) and m.get("id")}
+    order = [str(m.get("id")) for m in index["memes"] if isinstance(m, dict) and m.get("id")]
 
+    processed = 0
     for name in sorted(os.listdir(SHEETS)):
         if not name.lower().endswith(".png"):
             continue
         stem = os.path.splitext(name)[0]
+        if only is not None and stem not in only:
+            continue
         entries = captions.get(stem)
-        if not entries or len(entries) != 9:
-            print(f"跳过 {name}: captions.json 里缺 {stem} 或不是 9 条", file=sys.stderr)
+        if not entries:
+            print(f"跳过 {name}: captions.json 里缺 {stem}", file=sys.stderr)
             continue
 
         sheet = Image.open(os.path.join(SHEETS, name)).convert("RGB")
-        cells = cut_cells(sheet)
+        gray = sheet.convert("L")
+        width, height = gray.size
+        gpx = gray.load()
+        row_profile = [0] * height
+        for y in range(height):
+            for x in range(width):
+                if gpx[x, y] < WHITE:
+                    row_profile[y] += 1
+        rows, cols = infer_grid(len(entries), width, height, row_profile)
+        if rows * cols != len(entries):
+            print(f"{name}: 推断 {rows}x{cols} 与 captions {len(entries)} 条不匹配", file=sys.stderr)
+            return 1
+
+        cells = cut_cells(sheet, rows, cols)
         for cell, entry in zip(cells, entries):
             meme_id = str(entry["id"]).strip()
             desc = str(entry.get("desc", "")).strip()
-            if not meme_id or meme_id in seen:
-                print(f"id 非法或重复: {meme_id}", file=sys.stderr)
+            if not meme_id:
+                print(f"id 非法: {meme_id!r}", file=sys.stderr)
                 return 1
             if not desc:
                 print(f"{meme_id} 缺 desc", file=sys.stderr)
                 return 1
-            seen.add(meme_id)
             if max(cell.size) > MAX_SIDE:
                 cell = cell.copy()
                 cell.thumbnail((MAX_SIDE, MAX_SIDE), Image.LANCZOS)
-            file_name = f"{meme_id}.webp"
-            cell.save(os.path.join(OUT, file_name), "WEBP", quality=88, method=6)
-            memes.append({"id": meme_id, "desc": desc, "meme_name": file_name})
-        print(f"{name} → 9 张")
+            file_name = f"{meme_id}.{EXT}"
+            cell.save(os.path.join(OUT, file_name), "PNG", optimize=True)
+            rec = {"id": meme_id, "desc": desc, "meme_name": file_name}
+            if meme_id in by_id:
+                by_id[meme_id] = rec
+            else:
+                by_id[meme_id] = rec
+                order.append(meme_id)
+        processed += len(entries)
+        print(f"{name} → {rows}x{cols} = {len(entries)} 张 ({EXT})")
 
-    with open(os.path.join(ROOT, "meme.json"), "w", encoding="utf-8") as fh:
-        json.dump({"version": 1, "memes": memes}, fh, ensure_ascii=False, indent=2)
+    index["memes"] = [by_id[i] for i in order if i in by_id]
+    with open(INDEX, "w", encoding="utf-8") as fh:
+        json.dump(index, fh, ensure_ascii=False, indent=2)
         fh.write("\n")
-    total = sum(os.path.getsize(os.path.join(OUT, m["meme_name"])) for m in memes)
-    print(f"完成: {len(memes)} 张 → memes/，共 {total / 1024:.0f} KB")
+
+    total = 0
+    for m in index["memes"]:
+        path = os.path.join(OUT, m["meme_name"])
+        if os.path.isfile(path):
+            total += os.path.getsize(path)
+    print(f"完成: 本轮 {processed} 张，索引共 {len(index['memes'])} 条 → memes/，约 {total / 1024:.0f} KB")
     return 0
 
 

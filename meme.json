@@ -4,137 +4,242 @@
     {
       "id": "jingya",
       "desc": "震惊瞪大眼睛，怀里抱着鲸鱼玩偶，额头冒感叹号（吃惊/意外）",
-      "meme_name": "jingya.webp"
+      "meme_name": "jingya.png"
     },
     {
       "id": "yiwen",
       "desc": "歪头疑惑，头顶鲸鱼气泡问号（没听懂/什么意思）",
-      "meme_name": "yiwen.webp"
+      "meme_name": "yiwen.png"
     },
     {
       "id": "baobao",
       "desc": "张开双臂闭眼笑，喊「抱抱！」（撒娇/求抱抱）",
-      "meme_name": "baobao.webp"
+      "meme_name": "baobao.png"
     },
     {
       "id": "leile",
       "desc": "整个人趴着吐舌头，说「累了…」（疲惫/没力气）",
-      "meme_name": "leile.webp"
+      "meme_name": "leile.png"
     },
     {
       "id": "chaofei",
       "desc": "缩成圆滚滚的鲸鱼球，得意说「超肥！」（自嘲/吃撑了）",
-      "meme_name": "chaofei.webp"
+      "meme_name": "chaofei.png"
     },
     {
       "id": "toukan",
       "desc": "躲在门后探头偷看，冒「…?」（暗中观察/悄悄看）",
-      "meme_name": "toukan.webp"
+      "meme_name": "toukan.png"
     },
     {
       "id": "anpai",
       "desc": "戴墨镜竖大拇指，说「安排！」（拍板/包在我身上）",
-      "meme_name": "anpai.webp"
+      "meme_name": "anpai.png"
     },
     {
       "id": "wuwu",
       "desc": "大哭，眼泪汪汪说「呜呜…」（委屈/难过）",
-      "meme_name": "wuwu.webp"
+      "meme_name": "wuwu.png"
     },
     {
       "id": "shuijiao",
       "desc": "抱着鲸鱼睡着，头顶飘 Zzz（睡觉/晚安）",
-      "meme_name": "shuijiao.webp"
+      "meme_name": "shuijiao.png"
     },
     {
       "id": "shengqi",
       "desc": "抱着鲸鱼板着脸，头顶怒气符号，说「生气了！」（不爽/生气）",
-      "meme_name": "shengqi.webp"
+      "meme_name": "shengqi.png"
     },
     {
       "id": "chaoshengqi",
       "desc": "张大嘴大喊，背后冒闪电，说「超生气!!!」（暴怒/炸毛）",
-      "meme_name": "chaoshengqi.webp"
+      "meme_name": "chaoshengqi.png"
     },
     {
       "id": "heng",
       "desc": "抱起手臂扭过头，说「哼…」（闹别扭/傲娇）",
-      "meme_name": "heng.webp"
+      "meme_name": "heng.png"
     },
     {
       "id": "wuyu",
       "desc": "趴在鲸鱼上翻白眼，头顶一团乱线，说「无语…」（无语/无奈）",
-      "meme_name": "wuyu.webp"
+      "meme_name": "wuyu.png"
     },
     {
       "id": "bailan",
       "desc": "瘫在地上一动不动，说「摆烂了…」（摆烂/不想努力）",
-      "meme_name": "bailan.webp"
+      "meme_name": "bailan.png"
     },
     {
       "id": "suanle",
       "desc": "趴在鲸鱼上叹气，说「算了…」（放弃/不计较）",
-      "meme_name": "suanle.webp"
+      "meme_name": "suanle.png"
     },
     {
       "id": "biefanwo",
       "desc": "低着头斜眼瞪人，说「别烦我」（烦躁/别打扰）",
-      "meme_name": "biefanwo.webp"
+      "meme_name": "biefanwo.png"
     },
     {
       "id": "buxiangli",
       "desc": "背对镜头生闷气，旁边飘出对话气泡，说「不想理你…」（冷战/不理人）",
-      "meme_name": "buxiangli.webp"
+      "meme_name": "buxiangli.png"
     },
     {
       "id": "tangping",
       "desc": "侧躺着不想动，说「躺平了…」（躺平/摆烂）",
-      "meme_name": "tangping.webp"
+      "meme_name": "tangping.png"
     },
     {
       "id": "jiayou",
       "desc": "挥拳大喊打气，说「加油！」（打气/冲一把）",
-      "meme_name": "jiayou.webp"
+      "meme_name": "jiayou.png"
     },
     {
       "id": "keyide",
       "desc": "双手合十、星星眼，说「你可以的！」（鼓励/相信你）",
-      "meme_name": "keyide.webp"
+      "meme_name": "keyide.png"
     },
     {
       "id": "henbang",
       "desc": "竖大拇指眨眼，说「很棒！❤」（夸奖/做得好）",
-      "meme_name": "henbang.webp"
+      "meme_name": "henbang.png"
     },
     {
       "id": "jixu",
       "desc": "举着牌子，上面写「继续加油！」（续力/别停）",
-      "meme_name": "jixu.webp"
+      "meme_name": "jixu.png"
     },
     {
       "id": "xinkule",
       "desc": "抱着鲸鱼感动到哭，说「辛苦了！」（致谢/心疼）",
-      "meme_name": "xinkule.webp"
+      "meme_name": "xinkule.png"
     },
     {
       "id": "chaozan",
       "desc": "抱着发光的星星，说「超赞！」（点赞/真棒）",
-      "meme_name": "chaozan.webp"
+      "meme_name": "chaozan.png"
     },
     {
       "id": "chongci",
       "desc": "举着道具刀往前冲，说「加油冲刺！」（上头/冲了）",
-      "meme_name": "chongci.webp"
+      "meme_name": "chongci.png"
     },
     {
       "id": "zuodedao",
       "desc": "鲸鱼趴在头顶，整个人趴在桌边，说「你做得到的！」（信任/打气）",
-      "meme_name": "zuodedao.webp"
+      "meme_name": "zuodedao.png"
     },
     {
       "id": "biefangqi",
       "desc": "闭眼抱着鲸鱼蹭，说「别放弃哦」（安慰/再坚持一下）",
-      "meme_name": "biefangqi.webp"
+      "meme_name": "biefangqi.png"
+    },
+    {
+      "id": "qihu",
+      "desc": "双手握拳张嘴怒吼，头顶冒怒气符号和蒸汽（气呼呼/暴怒）",
+      "meme_name": "qihu.png"
+    },
+    {
+      "id": "henga",
+      "desc": "抱臂鼓嘴扭头，头顶冒晕眩圈，说「哼…」（傲娇/不高兴）",
+      "meme_name": "henga.png"
+    },
+    {
+      "id": "bailanle",
+      "desc": "整个人趴平在地，旁边冒低气压线，说「摆烂了…」（摆烂/放弃）",
+      "meme_name": "bailanle.png"
+    },
+    {
+      "id": "qisile",
+      "desc": "仰躺蹬腿大闹，额头冒怒纹，说「气死了！」（气炸/翻车情绪）",
+      "meme_name": "qisile.png"
+    },
+    {
+      "id": "fanle",
+      "desc": "双手托腮趴桌，眼神无聊，旁边写「烦…」（厌烦/提不起劲）",
+      "meme_name": "fanle.png"
+    },
+    {
+      "id": "bulini",
+      "desc": "闭眼抱臂别过脸，吐出一口气，说「不想理你」（冷战/傲娇无视）",
+      "meme_name": "bulini.png"
+    },
+    {
+      "id": "biefan",
+      "desc": "抱膝缩着阴沉脸，说「别烦我…」（别打扰/心情不好）",
+      "meme_name": "biefan.png"
+    },
+    {
+      "id": "haolei",
+      "desc": "脸贴地虚脱趴着，身后飘残影，说「好累…」（累瘫/没电了）",
+      "meme_name": "haolei.png"
+    },
+    {
+      "id": "hengheng",
+      "desc": "鼓腮握拳生闷气，四周冒怒纹，说「哼！」（赌气/不服）",
+      "meme_name": "hengheng.png"
+    },
+    {
+      "id": "qisisile",
+      "desc": "握拳大喊冒蒸汽和怒纹，说「气死了!!!」（极度愤怒）",
+      "meme_name": "qisisile.png"
+    },
+    {
+      "id": "heng1",
+      "desc": "抱臂鼓嘴，旁边写「哼!」（哼声傲娇）",
+      "meme_name": "heng1.png"
+    },
+    {
+      "id": "bailanyu",
+      "desc": "趴地摆烂，旁边躺着小鲸鱼，说「摆烂了…」（彻底摆烂）",
+      "meme_name": "bailanyu.png"
+    },
+    {
+      "id": "fansile",
+      "desc": "抬腿跺脚发脾气冒怒纹，说「烦死了!!」（烦透了）",
+      "meme_name": "fansile.png"
+    },
+    {
+      "id": "shengqile",
+      "desc": "缩成一团生闷气，说「生气了…」（赌气/不理人）",
+      "meme_name": "shengqile.png"
+    },
+    {
+      "id": "wuwa",
+      "desc": "仰躺大哭，小鲸鱼陪哭，说「呜哇—!!」（大哭/崩溃）",
+      "meme_name": "wuwa.png"
+    },
+    {
+      "id": "xiangbuli",
+      "desc": "趴着鼓嘴侧目，说「不想理你…」（不想搭理）",
+      "meme_name": "xiangbuli.png"
+    },
+    {
+      "id": "bierewo",
+      "desc": "戴墨镜握拳警告，说「别惹我！」（别惹/不好惹）",
+      "meme_name": "bierewo.png"
+    },
+    {
+      "id": "zoule",
+      "desc": "背对转身甩尾走人，说「走了！」（翻脸走人）",
+      "meme_name": "zoule.png"
+    },
+    {
+      "id": "chaoqi",
+      "desc": "红眼怒视冒火焰怒纹，说「超气!!!」（超生气）",
+      "meme_name": "chaoqi.png"
+    },
+    {
+      "id": "aleile",
+      "desc": "趴平灵魂出窍冒小幽灵，说「啊…累了…」（累到升天）",
+      "meme_name": "aleile.png"
+    },
+    {
+      "id": "buyao",
+      "desc": "躲在大鲸鱼后面探头拒绝，说「不要!!」（拒绝/不要）",
+      "meme_name": "buyao.png"
     }
   ]
 }
