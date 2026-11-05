@@ -240,6 +240,11 @@
       "id": "buyao",
       "desc": "躲在大鲸鱼后面探头拒绝，说「不要!!」（拒绝/不要）",
       "meme_name": "buyao.png"
+    },
+    {
+      "id": "aojiao",
+      "desc": "傲娇鲸娘女仆六帧动态：鼓嘴抱臂→握拳炸毛→跺脚怒吼循环（傲娇/生气发作）",
+      "meme_name": "aojiao.gif"
     }
   ]
 }
